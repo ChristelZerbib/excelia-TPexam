@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [ dev ]
   pull_request:
     branches: [ main ]
 
@@ -20,17 +20,51 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - uses: actions/checkout@v2
+      # Runs virtual environnement test
+      - name: Virtual environnement
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # testing with doctest and flake8
+      - uses: actions/checkout@v2
+      #Runs doctests
+      - name: Tests
+        run: |
+          pip install -r requirements.txt
+          python3 -m pytest --doctest-modules --ignore=main.py
+      #Runs flake 8
+      - name: Flake 8
+        run: |
+          pip install -r requirements.txt
+          flake8 main.py
+      - name: ECHO REF
+        run: |
+          echo ${{ github.base_ref }}
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chekout repository
+        uses: actions/checkout@v2
+      - name: Deploy main to Heroku on merge
+        if: ${{ github.base_ref == 'main' }}
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: indus-dev-tp-exam
+          heroku_email: christelzerbib@gmail.com
+      - name: Deploy main to Heroku on push
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: indus-dev-tp-exam
+          heroku_email: christelzerbib@gmail.com
