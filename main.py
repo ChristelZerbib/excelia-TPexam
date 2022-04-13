@@ -1,5 +1,6 @@
 from bottle import route, run, template
 from helpers import somme
+import sys
 
 
 @route("/add/<x>/<y>")
@@ -13,4 +14,4 @@ def add(x, y):
     )
 
 
-run(host="localhost", port=8089)
+run(host="0.0.0.0", port=sys.argv[1], reloader=True)
