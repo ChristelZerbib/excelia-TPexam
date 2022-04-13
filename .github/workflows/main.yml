@@ -6,7 +6,7 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main, dev ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -45,24 +45,13 @@ jobs:
         run: |
           pip install -r requirements.txt
           flake8 main.py
-      - name: ECHO REF
-        run: |
-          echo ${{ github.base_ref }}
   deploy:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Chekout repository
         uses: actions/checkout@v2
-      - name: Deploy main to Heroku on merge
-        if: ${{ github.base_ref == 'main' }}
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: indus-dev-tp-exam
-          heroku_email: christelzerbib@gmail.com
-      - name: Deploy main to Heroku on push
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Deploy main to Heroku
         uses: akhileshns/heroku-deploy@v3.12.12
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
